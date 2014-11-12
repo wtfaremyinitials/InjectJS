@@ -1,58 +1,51 @@
-var HEADER_REGEX    = /function\ *\w*\([A-Za-z0-9\ ,]*\)/;
+var MutableFunction = function(func) {
+    this.name = '';
+    this.args = [];
+    this.body = [];
 
-var MutableFunction = function(inputFunction) {
-    this.func = inputFunction || function() {};
+    var funcStr = func+'';
+
+    var nameMatch = funcStr.match(/^function\s*([^\(]*)\(\s*[^\)]*\)/m);
+    if(nameMatch === null)
+        this.name = undefined;
+    else
+        this.name = nameMatch[1];
+
+    var argsMatch = funcStr.match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m);
+    if(argsMatch === null)
+        this.args = [];
+    else
+        this.args = argsMatch[1].split(',').map(function(arg) { return arg.trim(); });
+
+    var bodyMatch = funcStr.match(/^function\s*[^\(]*\(\s*[^\)]*\)\s*\{([\S\s]*)\}/);
+    this.body = bodyMatch[1].split(/[;\n]/);
+    this.body = clean(this.body, '');
+    this.body = this.body.map(function(line) { return line.trim(); });
 };
 
-MutableFunction.prototype = {
-    getAsString: function() {
-        return this.func + '';
-    },
+MutableFunction.prototype.toFunction = function() {
+    var func  = new Function(this.args.join(','), this.body.join('\n'));
+    func.name = this.name;
+    return func;
+};
+MutableFunction.prototype.export = MutableFunction.prototype.toFunction;
 
-    NAME_REGEX: /function\ *(\w*)/,
-    getName:     function() {
-        var funcStr = this.getAsString(this.func);
-        var name    = funcStr.match(this.NAME_REGEX)[1];
+MutableFunction.prototype.apply = function(that, args) {
+    return this.toFunction().apply(that, args);
+};
 
-        if(name == '')
-            name = undefined;
+MutableFunction.prototype.call = function(that) {
+    return this.apply(that, Array.prototype.slice.call(arguments, 1));
+};
 
-        return name;
-    },
+module.exports = MutableFunction;
 
-    PARAM_REGEX: /function\ *\w*\((\s*(_?)(.+?)\1\s*)?\)/,
-    getParams:   function() {
-        var funcStr = this.getAsString(this.func);
-        var params  = funcStr.match(this.PARAM_REGEX)[1];
-        if(params == undefined)
-            return [];
-        params = params.split(',');
-        params = params.map(function(str) { return str.trim(); });
-        return params;
+var clean = function(arr, toDelete) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i] == toDelete) {
+            arr.splice(i, 1);
+            i--;
+        }
     }
+    return arr;
 };
-
-
-var fooFunc = function() {
-    console.log("Hello World");
-    console.log("Derp")
-    var a = 0;
-    a++; a++;
-    console.log(a);
-};
-
-function barFunc() {
-    console.log("Hello World");
-    console.log("Derp")
-    var a = 0;
-    a++; a++;
-    console.log(a);
-};
-
-function bazFunc(foo, bar, baz, $) {
-    console.log(in1 + in1);
-};
-
-var test = new MutableFunction(bazFunc);
-console.log(test.getName());
-console.log(test.getParams());
