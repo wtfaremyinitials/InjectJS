@@ -1,0 +1,15 @@
+{
+    "name": "inject",
+    "version": "0.0.0",
+    "description": "A library for manipulating Javascript functions at runtime",
+    "homepage": "http://github.com/wtfaremyinitials/injectjs",
+    "author": {
+        "name": "Will Franzen",
+        "url": "https://github.com/wtfaremyinitials"
+    },
+    "main": "./inject.js",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/wtfaremyinitials/injectjs.git"
+    }
+}
